@@ -288,7 +288,7 @@ def create_performance_charts(df):
         st.markdown('<div class="chart-title">Speed Over Time</div>', unsafe_allow_html=True)
         
         # Group by hour for better visualization
-        df['hour'] = df['timestamp'].dt.floor('H')
+        df['hour'] = df['timestamp'].dt.floor('h')
         speed_by_hour = df.groupby('hour')['speed'].agg(['mean', 'max', 'min']).reset_index()
         
         fig = go.Figure()
@@ -316,11 +316,18 @@ def create_performance_charts(df):
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         st.markdown('<div class="chart-title">Vehicle Performance Comparison</div>', unsafe_allow_html=True)
         
-        # Calculate performance metrics per vehicle
-        vehicle_perf = df.groupby('vehicle_id').agg({
-            'speed': ['mean', 'max', 'std'],
-            'acceleration': ['mean', 'std'] if 'acceleration' in df.columns else ['mean']
-        }).round(2)
+        # Calculate performance metrics per vehicle - dynamic based on available columns
+        agg_dict = {}
+        if 'speed' in df.columns:
+            agg_dict['speed'] = ['mean', 'max', 'std']
+        if 'acceleration' in df.columns:
+            agg_dict['acceleration'] = ['mean', 'std']
+        
+        if agg_dict:
+            vehicle_perf = df.groupby('vehicle_id').agg(agg_dict).round(2)
+        else:
+            # Fallback if no numeric columns available
+            vehicle_perf = df.groupby('vehicle_id').size().to_frame('record_count')
         
         # Flatten column names
         vehicle_perf.columns = ['_'.join(col).strip() for col in vehicle_perf.columns]
