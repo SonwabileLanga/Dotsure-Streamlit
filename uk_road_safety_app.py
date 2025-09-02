@@ -251,7 +251,13 @@ def main():
     st.markdown('<h2 style="text-align: center; color: #666;">UK Road Safety Analytics Dashboard</h2>', unsafe_allow_html=True)
     
     # Sidebar
-    st.sidebar.header("📊 Data Analysis")
+    st.sidebar.header("📊 Data Import Options")
+    
+    # Data Import Methods
+    import_method = st.sidebar.radio(
+        "Choose Data Import Method:",
+        ["📁 Upload CSV Files", "🌐 Load from URL", "📂 Use Sample Data", "💾 Load from GitHub"]
+    )
     
     # Advanced Filters Section
     st.sidebar.header("🔍 Advanced Filters")
@@ -260,8 +266,117 @@ def main():
     if 'filters_applied' not in st.session_state:
         st.session_state.filters_applied = False
     
-    # Load data button
-    if st.sidebar.button("🔄 Load UK Road Safety Data"):
+    # Data loading based on method
+    if import_method == "📁 Upload CSV Files":
+        st.sidebar.subheader("Upload Your CSV Files")
+        uploaded_accidents = st.sidebar.file_uploader(
+            "Upload Accident Data CSV",
+            type="csv",
+            help="Upload your accident information CSV file"
+        )
+        uploaded_vehicles = st.sidebar.file_uploader(
+            "Upload Vehicle Data CSV (Optional)",
+            type="csv",
+            help="Upload your vehicle information CSV file"
+        )
+        
+        if uploaded_accidents is not None:
+            if st.sidebar.button("🔄 Process Uploaded Data"):
+                with st.spinner("Processing uploaded data..."):
+                    try:
+                        # Process uploaded accident data
+                        accidents_df = pd.read_csv(uploaded_accidents)
+                        st.session_state.accidents_df = accidents_df
+                        st.session_state.vehicles_df = pd.DataFrame()  # Empty if no vehicle data
+                        
+                        # Process vehicle data if uploaded
+                        if uploaded_vehicles is not None:
+                            vehicles_df = pd.read_csv(uploaded_vehicles)
+                            st.session_state.vehicles_df = vehicles_df
+                        
+                        st.session_state.data_loaded = True
+                        st.sidebar.success("✅ Data uploaded and processed successfully!")
+                    except Exception as e:
+                        st.sidebar.error(f"❌ Error processing uploaded data: {str(e)}")
+    
+    elif import_method == "🌐 Load from URL":
+        st.sidebar.subheader("Load Data from URL")
+        accidents_url = st.sidebar.text_input(
+            "Accident Data URL",
+            placeholder="https://example.com/accident_data.csv",
+            help="Enter URL to accident data CSV file"
+        )
+        vehicles_url = st.sidebar.text_input(
+            "Vehicle Data URL (Optional)",
+            placeholder="https://example.com/vehicle_data.csv",
+            help="Enter URL to vehicle data CSV file"
+        )
+        
+        if accidents_url and st.sidebar.button("🔄 Load from URL"):
+            with st.spinner("Loading data from URL..."):
+                try:
+                    # Load accident data from URL
+                    accidents_df = pd.read_csv(accidents_url)
+                    st.session_state.accidents_df = accidents_df
+                    st.session_state.vehicles_df = pd.DataFrame()
+                    
+                    # Load vehicle data from URL if provided
+                    if vehicles_url:
+                        vehicles_df = pd.read_csv(vehicles_url)
+                        st.session_state.vehicles_df = vehicles_df
+                    
+                    st.session_state.data_loaded = True
+                    st.sidebar.success("✅ Data loaded from URL successfully!")
+                except Exception as e:
+                    st.sidebar.error(f"❌ Error loading from URL: {str(e)}")
+    
+    elif import_method == "📂 Use Sample Data":
+        if st.sidebar.button("🔄 Load Sample Data"):
+            with st.spinner("Loading sample data..."):
+                try:
+                    # Load sample data
+                    sample_df = pd.read_csv('sample_telematics_data.csv')
+                    # Convert sample data to match expected format
+                    accidents_df = sample_df.rename(columns={
+                        'vehicle_id': 'Accident_Index',
+                        'timestamp': 'Date',
+                        'speed': 'Speed_limit'
+                    })
+                    accidents_df['Accident_Severity'] = 'Slight'
+                    accidents_df['Number_of_Vehicles'] = 1
+                    accidents_df['Number_of_Casualties'] = 0
+                    accidents_df['Weather_Conditions'] = 'Fine no high winds'
+                    accidents_df['Road_Type'] = 'Single carriageway'
+                    
+                    st.session_state.accidents_df = accidents_df
+                    st.session_state.vehicles_df = pd.DataFrame()
+                    st.session_state.data_loaded = True
+                    st.sidebar.success("✅ Sample data loaded successfully!")
+                except Exception as e:
+                    st.sidebar.error(f"❌ Error loading sample data: {str(e)}")
+    
+    elif import_method == "💾 Load from GitHub":
+        st.sidebar.subheader("Load from GitHub Repository")
+        github_url = st.sidebar.text_input(
+            "GitHub Raw URL",
+            placeholder="https://raw.githubusercontent.com/user/repo/main/data.csv",
+            help="Enter GitHub raw URL to CSV file"
+        )
+        
+        if github_url and st.sidebar.button("🔄 Load from GitHub"):
+            with st.spinner("Loading data from GitHub..."):
+                try:
+                    # Load data from GitHub
+                    df = pd.read_csv(github_url)
+                    st.session_state.accidents_df = df
+                    st.session_state.vehicles_df = pd.DataFrame()
+                    st.session_state.data_loaded = True
+                    st.sidebar.success("✅ Data loaded from GitHub successfully!")
+                except Exception as e:
+                    st.sidebar.error(f"❌ Error loading from GitHub: {str(e)}")
+    
+    # Legacy load button for local files
+    if st.sidebar.button("🔄 Load Local UK Road Safety Data"):
         # Create progress bar
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -764,41 +879,88 @@ def main():
     
     else:
         # Show instructions
-        st.info("👆 Click 'Load UK Road Safety Data' in the sidebar to begin analysis!")
+        st.info("👆 Choose a data import method in the sidebar to begin analysis!")
         
-        st.header("📋 UK Road Safety Data Analysis")
+        # Show data format help
+        show_data_format_help()
+        
+        st.header("📋 DOTSURE STREAMLIT - Multi-Source Data Import")
         st.markdown("""
-        This dashboard analyzes UK road safety data including:
+        This advanced dashboard supports multiple ways to import your telematics data:
         
-        ### Accident Information
-        - Accident severity (Fatal, Serious, Slight)
-        - Location data (GPS coordinates)
-        - Date and time information
-        - Weather and road conditions
-        - Speed limits and road types
+        ### 📁 Upload CSV Files
+        - Upload your accident and vehicle data directly
+        - Supports any CSV format with automatic column detection
+        - Works with any size dataset
         
-        ### Vehicle Information
-        - Vehicle types and makes
-        - Driver demographics
-        - Vehicle maneuvers
-        - Impact points
+        ### 🌐 Load from URL
+        - Import data from any public URL
+        - Supports Google Sheets, Dropbox, OneDrive
+        - Real-time data updates
         
-        ### Analytics Features
-        - **Risk Assessment**: Overall risk scoring based on accident severity
-        - **Geographic Analysis**: Interactive maps showing accident locations
-        - **Temporal Analysis**: Time patterns and trends
-        - **Environmental Factors**: Weather and road condition impacts
-        - **Speed Limit Analysis**: Relationship between speed limits and accidents
+        ### 💾 Load from GitHub
+        - Import from GitHub repositories
+        - Use raw GitHub URLs for direct CSV access
+        - Version control for your data
+        
+        ### 📂 Use Sample Data
+        - Test the dashboard with included sample data
+        - Perfect for exploring features
+        - No external data required
         """)
         
-        st.header("🎯 Key Insights")
+        st.header("🎯 Analytics Features")
         st.markdown("""
-        The dashboard will help you identify:
-        - **High-risk locations** with frequent accidents
-        - **Time patterns** when accidents are most likely
-        - **Environmental factors** that contribute to accidents
-        - **Speed limit relationships** with accident severity
-        - **Vehicle and driver factors** in accident causation
+        Once you import your data, you'll get:
+        - **Advanced Filtering**: Date, severity, weather, location filters
+        - **Interactive Maps**: GPS visualization with clickable markers
+        - **Trend Analysis**: Time-series patterns and correlations
+        - **Export Capabilities**: Download filtered data and reports
+        - **Risk Assessment**: Comprehensive scoring and analysis
+        - **Real-time Processing**: Instant updates as you filter
+        """)
+        
+        st.header("🚀 Getting Started")
+        st.markdown("""
+        1. **Choose Import Method**: Select from the sidebar options
+        2. **Upload/Enter Data**: Follow the prompts for your chosen method
+        3. **Apply Filters**: Use the advanced filters to focus your analysis
+        4. **Explore Analytics**: Navigate through the 5 analytics tabs
+        5. **Export Results**: Download your findings as CSV reports
+        """)
+
+def show_data_format_help():
+    """Show help for data format"""
+    st.sidebar.subheader("📋 Data Format Help")
+    
+    with st.sidebar.expander("Required Columns"):
+        st.write("""
+        **Accident Data CSV should have:**
+        - `Accident_Index`: Unique identifier
+        - `Date`: Date of accident (YYYY-MM-DD)
+        - `Latitude`: GPS latitude
+        - `Longitude`: GPS longitude
+        
+        **Optional Columns:**
+        - `Accident_Severity`: Fatal/Serious/Slight
+        - `Number_of_Vehicles`: Count of vehicles
+        - `Number_of_Casualties`: Count of casualties
+        - `Weather_Conditions`: Weather description
+        - `Road_Type`: Type of road
+        - `Speed_limit`: Speed limit in mph
+        - `Time`: Time of accident (HH:MM)
+        """)
+    
+    with st.sidebar.expander("Example URLs"):
+        st.write("""
+        **GitHub Raw URLs:**
+        - `https://raw.githubusercontent.com/user/repo/main/data.csv`
+        - `https://raw.githubusercontent.com/user/repo/branch/file.csv`
+        
+        **Other URLs:**
+        - Any direct link to CSV file
+        - Google Sheets (export as CSV)
+        - Dropbox/OneDrive public links
         """)
 
 if __name__ == "__main__":
