@@ -541,11 +541,16 @@ def main():
         tab_functions.append(lambda: create_module_ui("TecDoc Catalog", create_tecdoc_ui, TECDOC_AVAILABLE))
     
     # Create tabs dynamically
-    tabs = st.tabs(available_tabs)
-    
-    for i, (tab, func) in enumerate(zip(tabs, tab_functions)):
-        with tab:
-            func()
+    if len(available_tabs) > 1:
+        tabs = st.tabs(available_tabs)
+        
+        for i, (tab, func) in enumerate(zip(tabs, tab_functions)):
+            with tab:
+                func()
+    else:
+        # If only one tab, just run the function
+        if tab_functions:
+            tab_functions[0]()
     
     # Footer
     st.markdown("""
