@@ -327,17 +327,22 @@ def create_dynamic_filters(df, column_info):
         elif info['is_numeric']:
             min_val = df[col].min()
             max_val = df[col].max()
-            if not pd.isna(min_val) and not pd.isna(max_val):
+            if not pd.isna(min_val) and not pd.isna(max_val) and min_val != max_val:
+                # Add small buffer to avoid slider issues
+                buffer = (max_val - min_val) * 0.01 if max_val != min_val else 1.0
                 range_values = st.slider(
                     f"Range for {col}",
-                    min_value=float(min_val),
-                    max_value=float(max_val),
+                    min_value=float(min_val - buffer),
+                    max_value=float(max_val + buffer),
                     value=(float(min_val), float(max_val))
                 )
                 filtered_df = filtered_df[
                     (filtered_df[col] >= range_values[0]) & 
                     (filtered_df[col] <= range_values[1])
                 ]
+            elif min_val == max_val:
+                # Show static value for columns with all same values
+                st.info(f"{col}: All values are {min_val}")
     
     return filtered_df
 
@@ -367,7 +372,8 @@ def create_dynamic_charts(df, column_info):
             df[timestamp_col] = pd.to_datetime(df[timestamp_col])
             
             # Group by hour for better visualization
-            df['hour'] = df[timestamp_col].dt.floor('h')
+            df_copy = df.copy()
+            df_copy['hour'] = df_copy[timestamp_col].dt.floor('h')
             
             # Create subplot for multiple numeric columns
             if len(numeric_cols) > 1:
@@ -378,7 +384,7 @@ def create_dynamic_charts(df, column_info):
                 )
                 
                 for i, col in enumerate(numeric_cols[:3]):  # Limit to 3 columns
-                    hourly_data = df.groupby('hour')[col].mean().reset_index()
+                    hourly_data = df_copy.groupby('hour')[col].mean().reset_index()
                     fig.add_trace(
                         go.Scatter(x=hourly_data['hour'], y=hourly_data[col], 
                                  mode='lines', name=col),
@@ -386,7 +392,7 @@ def create_dynamic_charts(df, column_info):
                     )
             else:
                 col = numeric_cols[0]
-                hourly_data = df.groupby('hour')[col].agg(['mean', 'max', 'min']).reset_index()
+                hourly_data = df_copy.groupby('hour')[col].agg(['mean', 'max', 'min']).reset_index()
                 
                 fig = go.Figure()
                 fig.add_trace(go.Scatter(x=hourly_data['hour'], y=hourly_data['mean'], 
