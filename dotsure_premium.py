@@ -181,12 +181,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def create_header():
-    """Create the premium header"""
+    """Create the telematics dashboard header"""
     st.markdown("""
     <div class="main-header">
-        <h1>🚗 DOTSURE PREMIUM</h1>
-        <p>Advanced Telematics Analytics Platform</p>
-        <p>Professional-grade insights for fleet management and road safety</p>
+        <h1>🚗 DOTSURE TELEMATICS</h1>
+        <p>Fleet Management Dashboard</p>
+        <p>Real-time vehicle tracking and analytics</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -229,82 +229,56 @@ def load_data_with_progress():
     status_text.empty()
 
 def create_data_import_section():
-    """Create the data import section with premium UI"""
-    st.sidebar.markdown("### 📊 Data Import")
+    """Create the data import section with clean telematics UI"""
+    st.sidebar.markdown("### 🚗 Data Source")
     
-    # Import method selection with icons
+    # Clean import method selection
     import_method = st.sidebar.selectbox(
-        "Choose Import Method:",
-        ["📁 Upload Files", "🌐 Load from URL", "💾 GitHub Repository", "📂 Sample Data", "🗄️ Large Files (>200MB)"],
-        help="Select how you want to import your telematics data"
+        "Select Data Source:",
+        ["📁 Upload CSV", "🌐 URL Import", "📂 Demo Data"],
+        help="Choose your data source"
     )
     
-    if import_method == "📁 Upload Files":
-        st.sidebar.markdown("#### Upload Your Data")
-        st.sidebar.markdown('<div class="alert-info">💡 <strong>Tip:</strong> Files up to 200MB supported. For larger files, use "Large Files" option.</div>', unsafe_allow_html=True)
-        
+    if import_method == "📁 Upload CSV":
         uploaded_file = st.sidebar.file_uploader(
-            "Choose CSV file",
+            "Upload CSV File",
             type="csv",
-            help="Upload your telematics data CSV file"
+            help="Upload your telematics data"
         )
         
         if uploaded_file is not None:
-            if st.sidebar.button("🚀 Process Data", type="primary"):
-                with st.spinner("Processing your data..."):
+            if st.sidebar.button("🚀 Load Data", type="primary"):
+                with st.spinner("Processing..."):
                     try:
                         df = pd.read_csv(uploaded_file)
                         st.session_state.data = df
                         st.session_state.data_loaded = True
-                        st.sidebar.success("✅ Data processed successfully!")
+                        st.sidebar.success("✅ Data loaded!")
                         load_data_with_progress()
                     except Exception as e:
                         st.sidebar.error(f"❌ Error: {str(e)}")
     
-    elif import_method == "🌐 Load from URL":
-        st.sidebar.markdown("#### Load from URL")
+    elif import_method == "🌐 URL Import":
         url = st.sidebar.text_input(
             "Data URL",
             placeholder="https://example.com/data.csv",
-            help="Enter URL to your CSV data file"
+            help="Enter CSV file URL"
         )
         
         if url and st.sidebar.button("🌐 Load from URL", type="primary"):
-            with st.spinner("Loading data from URL..."):
+            with st.spinner("Loading..."):
                 try:
                     df = pd.read_csv(url)
                     st.session_state.data = df
                     st.session_state.data_loaded = True
-                    st.sidebar.success("✅ Data loaded from URL!")
+                    st.sidebar.success("✅ Data loaded!")
                     load_data_with_progress()
                 except Exception as e:
                     st.sidebar.error(f"❌ Error: {str(e)}")
     
-    elif import_method == "💾 GitHub Repository":
-        st.sidebar.markdown("#### GitHub Repository")
-        github_url = st.sidebar.text_input(
-            "GitHub Raw URL",
-            placeholder="https://raw.githubusercontent.com/user/repo/main/data.csv",
-            help="Enter GitHub raw URL to CSV file"
-        )
-        
-        if github_url and st.sidebar.button("💾 Load from GitHub", type="primary"):
-            with st.spinner("Loading from GitHub..."):
-                try:
-                    df = pd.read_csv(github_url)
-                    st.session_state.data = df
-                    st.session_state.data_loaded = True
-                    st.sidebar.success("✅ Data loaded from GitHub!")
-                    load_data_with_progress()
-                except Exception as e:
-                    st.sidebar.error(f"❌ Error: {str(e)}")
-    
-    elif import_method == "📂 Sample Data":
-        st.sidebar.markdown("#### Sample Data")
-        st.sidebar.markdown('<div class="alert-info">📊 <strong>Demo Data:</strong> Explore the dashboard with sample telematics data.</div>', unsafe_allow_html=True)
-        
-        if st.sidebar.button("📂 Load Sample Data", type="primary"):
-            with st.spinner("Loading sample data..."):
+    elif import_method == "📂 Demo Data":
+        if st.sidebar.button("📂 Load Demo Data", type="primary"):
+            with st.spinner("Loading demo data..."):
                 try:
                     # Create sample data
                     np.random.seed(42)
@@ -324,50 +298,26 @@ def create_data_import_section():
                     
                     st.session_state.data = sample_data
                     st.session_state.data_loaded = True
-                    st.sidebar.success("✅ Sample data loaded!")
+                    st.sidebar.success("✅ Demo data loaded!")
                     load_data_with_progress()
                 except Exception as e:
                     st.sidebar.error(f"❌ Error: {str(e)}")
-    
-    elif import_method == "🗄️ Large Files (>200MB)":
-        st.sidebar.markdown("#### Large File Solutions")
-        st.sidebar.markdown('<div class="alert-warning">⚠️ <strong>Note:</strong> Streamlit has a 200MB upload limit. Use these solutions for larger files.</div>', unsafe_allow_html=True)
-        
-        st.sidebar.markdown("**Recommended Solutions:**")
-        st.sidebar.markdown("""
-        1. **Split your file** using the CSV splitter tool
-        2. **Use cloud storage** (Google Drive, Dropbox)
-        3. **Database connection** for very large datasets
-        4. **Data sampling** for initial analysis
-        """)
-        
-        if st.sidebar.button("📋 Show Detailed Guide", type="secondary"):
-            st.sidebar.markdown("""
-            **CSV Splitter Command:**
-            ```bash
-            python csv_splitter.py your_file.csv 50000 chunks_
-            ```
-            
-            **Cloud Storage URLs:**
-            - Google Drive: `https://drive.google.com/uc?export=download&id=FILE_ID`
-            - Dropbox: `https://dl.dropboxusercontent.com/s/FILE_ID/file.csv`
-            """)
 
 def create_analytics_dashboard():
     """Create the main analytics dashboard"""
     if not hasattr(st.session_state, 'data_loaded') or not st.session_state.data_loaded:
         st.markdown("""
         <div class="alert-info">
-            <h3>🎯 Welcome to DOTSURE PREMIUM</h3>
-            <p>Please import your telematics data using the sidebar to begin analysis.</p>
-            <p><strong>Features:</strong></p>
+            <h3>🚗 Welcome to DOTSURE TELEMATICS</h3>
+            <p>Load your fleet data to begin monitoring and analysis.</p>
+            <p><strong>Dashboard Features:</strong></p>
             <ul>
-                <li>📊 Advanced analytics and visualizations</li>
-                <li>🗺️ Interactive maps with GPS tracking</li>
-                <li>📈 Trend analysis and predictions</li>
-                <li>🎯 Risk assessment and scoring</li>
-                <li>📤 Export capabilities</li>
-                <li>☁️ Multi-source data import</li>
+                <li>🗺️ Real-time fleet map tracking</li>
+                <li>📊 Vehicle performance analytics</li>
+                <li>⚠️ Safety alerts and incident monitoring</li>
+                <li>📈 Performance trends and insights</li>
+                <li>📤 Fleet reports and exports</li>
+                <li>🔍 Advanced filtering and search</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
@@ -405,8 +355,8 @@ def create_analytics_dashboard():
         else:
             st.markdown(create_metric_card("Status", "✅ Ready", "Data loaded successfully"), unsafe_allow_html=True)
     
-    # Main analytics tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["🗺️ Map View", "📈 Analytics", "🎯 Risk Assessment", "📊 Trends", "📤 Export"])
+    # Main telematics tabs
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["🗺️ Fleet Map", "📊 Vehicle Analytics", "⚠️ Safety Alerts", "📈 Performance", "📤 Reports"])
     
     with tab1:
         create_map_view(df)
@@ -424,8 +374,8 @@ def create_analytics_dashboard():
         create_export_section(df)
 
 def create_map_view(df):
-    """Create the interactive map view"""
-    st.markdown("### 🗺️ Interactive Map View")
+    """Create the fleet map view"""
+    st.markdown("### 🗺️ Fleet Map View")
     
     if 'latitude' in df.columns and 'longitude' in df.columns:
         # Create map
@@ -489,8 +439,8 @@ def create_map_view(df):
         st.info("📍 No location data found. Map view requires 'latitude' and 'longitude' columns.")
 
 def create_analytics_view(df):
-    """Create the analytics view"""
-    st.markdown("### 📈 Data Analytics")
+    """Create the vehicle analytics view"""
+    st.markdown("### 📊 Vehicle Analytics")
     
     # Data distribution
     col1, col2 = st.columns(2)
@@ -526,8 +476,8 @@ def create_analytics_view(df):
         st.plotly_chart(fig, use_container_width=True)
 
 def create_risk_assessment(df):
-    """Create the risk assessment view"""
-    st.markdown("### 🎯 Risk Assessment")
+    """Create the safety alerts view"""
+    st.markdown("### ⚠️ Safety Alerts")
     
     # Calculate risk score
     risk_score = 100  # Start with perfect score
@@ -599,8 +549,8 @@ def create_risk_assessment(df):
         st.plotly_chart(fig, use_container_width=True)
 
 def create_trends_view(df):
-    """Create the trends view"""
-    st.markdown("### 📊 Trend Analysis")
+    """Create the performance view"""
+    st.markdown("### 📈 Performance Analysis")
     
     if 'timestamp' in df.columns:
         # Time series analysis
@@ -651,8 +601,8 @@ def create_trends_view(df):
         st.info("📅 No timestamp data found. Trend analysis requires a 'timestamp' column.")
 
 def create_export_section(df):
-    """Create the export section"""
-    st.markdown("### 📤 Export Data & Reports")
+    """Create the reports section"""
+    st.markdown("### 📤 Fleet Reports")
     
     col1, col2 = st.columns(2)
     
@@ -736,10 +686,10 @@ def main():
     with st.sidebar:
         create_data_import_section()
         
-        # Advanced filters (if data is loaded)
+        # Filters (if data is loaded)
         if st.session_state.data_loaded:
             st.markdown("---")
-            st.markdown("### 🔍 Advanced Filters")
+            st.markdown("### 🔍 Filters")
             
             df = st.session_state.data
             
@@ -761,7 +711,7 @@ def main():
             # Vehicle filter
             if 'vehicle_id' in df.columns:
                 selected_vehicles = st.multiselect(
-                    "Select Vehicles",
+                    "Vehicles",
                     options=df['vehicle_id'].unique(),
                     default=df['vehicle_id'].unique()
                 )
@@ -772,7 +722,7 @@ def main():
             # Speed filter
             if 'speed' in df.columns:
                 speed_range = st.slider(
-                    "Speed Range (km/h)",
+                    "Speed (km/h)",
                     min_value=float(df['speed'].min()),
                     max_value=float(df['speed'].max()),
                     value=(float(df['speed'].min()), float(df['speed'].max()))
