@@ -1,0 +1,23 @@
+# DOTSURE MONITORING DASHBOARD - Requirements
+# Optimized for Grafana-style monitoring dashboard
+
+# Core Streamlit and Data Processing
+streamlit>=1.28.0
+pandas>=1.5.0
+numpy>=1.21.0
+plotly>=5.0.0
+folium>=0.14.0
+streamlit-folium>=0.15.0
+
+# Data Processing and Analysis
+geopy>=2.3.0
+python-dateutil>=2.8.0
+pytz>=2022.1
+
+# Visualization and UI
+matplotlib>=3.5.0
+seaborn>=0.11.0
+
+# Production dependencies
+gunicorn>=20.1.0
+waitress>=2.1.0
