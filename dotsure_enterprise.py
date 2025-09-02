@@ -21,6 +21,7 @@ from database_manager import DatabaseManager, create_database_ui
 from azure_integration import AzureServicesManager, TelematicsDataPipeline, create_azure_ui
 from api_integration import APIManager, create_api_ui
 from ai_ml_engine import RiskScoringEngine, EventDetectionEngine, AlertingSystem, create_ai_ml_ui
+from tecdoc_integration import TecDocAPI, VehicleDataManager, create_tecdoc_ui
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -463,6 +464,7 @@ def main():
                 <li>🗄️ Multi-database integration (SQLite, PostgreSQL, MySQL)</li>
                 <li>☁️ Azure services integration (Blob Storage, Cognitive Services)</li>
                 <li>🌐 Third-party API integration (Weather, Traffic, Geocoding)</li>
+                <li>🔧 TecDoc Catalog integration (VIN decoding, Parts search)</li>
                 <li>🤖 AI/ML-powered risk scoring and event detection</li>
                 <li>📊 Advanced analytics and predictive insights</li>
                 <li>⚠️ Intelligent alerting and monitoring</li>
@@ -475,7 +477,7 @@ def main():
         # Feature showcase
         st.markdown("### 🚀 Enterprise Capabilities")
         
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             st.markdown("""
@@ -504,6 +506,15 @@ def main():
             </div>
             """, unsafe_allow_html=True)
         
+        with col4:
+            st.markdown("""
+            <div class="metric-card">
+                <h3>🔧 TecDoc Catalog</h3>
+                <p class="value">Auto Parts</p>
+                <p class="subtitle">VIN decoding, Parts search</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
         return
     
     df = st.session_state.data
@@ -512,8 +523,8 @@ def main():
     create_dashboard_overview(df)
     
     # Main tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📊 Analytics", "🗄️ Database", "☁️ Azure", "🌐 APIs", "🤖 AI/ML"
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "📊 Analytics", "🗄️ Database", "☁️ Azure", "🌐 APIs", "🤖 AI/ML", "🔧 TecDoc"
     ])
     
     with tab1:
@@ -530,6 +541,9 @@ def main():
     
     with tab5:
         create_ai_ml_ui()
+    
+    with tab6:
+        create_tecdoc_ui()
     
     # Footer
     st.markdown("""
