@@ -256,7 +256,7 @@ def main():
     # Data Import Methods
     import_method = st.sidebar.radio(
         "Choose Data Import Method:",
-        ["📁 Upload CSV Files", "🌐 Load from URL", "📂 Use Sample Data", "💾 Load from GitHub", "🗄️ Large File Solutions"]
+        ["🗄️ Large Files (>200MB)", "📁 Upload CSV Files", "🌐 Load from URL", "📂 Use Sample Data", "💾 Load from GitHub"]
     )
     
     # Advanced Filters Section
@@ -267,12 +267,106 @@ def main():
         st.session_state.filters_applied = False
     
     # Data loading based on method
-    if import_method == "📁 Upload CSV Files":
+    if import_method == "🗄️ Large Files (>200MB)":
+        st.sidebar.subheader("🚀 Large File Solutions (2GB+)")
+        
+        st.sidebar.markdown("""
+        **Streamlit has a 200MB upload limit, but we have solutions for larger files:**
+        """)
+        
+        # Option 1: Split files first
+        st.sidebar.markdown("### Option 1: Split Your File First")
+        st.sidebar.markdown("""
+        **For files >200MB, split them first:**
+        
+        1. **Download the CSV Splitter Tool** (included in this project)
+        2. **Run the splitter** on your large file:
+           ```bash
+           python csv_splitter.py your_large_file.csv 50000 chunks_
+           ```
+        3. **Upload the smaller chunks** using "Upload CSV Files" below
+        4. **Or use cloud storage** for the chunks
+        """)
+        
+        # Option 2: Cloud storage
+        st.sidebar.markdown("### Option 2: Cloud Storage (Recommended)")
+        st.sidebar.markdown("""
+        **Upload to cloud storage and use URL:**
+        
+        - **Google Drive**: Upload file → Share publicly → Get CSV export URL
+        - **Dropbox**: Upload file → Create public link → Get direct download URL
+        - **OneDrive**: Upload file → Share → Get download URL
+        - **AWS S3**: Upload to public bucket → Get object URL
+        
+        Then use "Load from URL" option below.
+        """)
+        
+        # Option 3: Database
+        st.sidebar.markdown("### Option 3: Database Connection")
+        st.sidebar.markdown("""
+        **For very large datasets:**
+        
+        - **PostgreSQL**: Import CSV to database → Connect via dashboard
+        - **MySQL**: Load data into database → Use connection
+        - **SQLite**: Convert CSV to SQLite → Upload database file
+        - **BigQuery**: Upload to BigQuery → Connect via API
+        """)
+        
+        # Option 4: Sampling
+        st.sidebar.markdown("### Option 4: Data Sampling")
+        st.sidebar.markdown("""
+        **For initial analysis:**
+        
+        - **Random sampling**: Extract 10K-100K random rows
+        - **Time-based sampling**: Get data from specific periods
+        - **Geographic sampling**: Focus on specific regions
+        - **Use pandas**: `df.sample(n=50000)` before upload
+        """)
+        
+        # Quick splitter tool
+        st.sidebar.markdown("### 🛠️ Quick File Splitter")
+        if st.sidebar.button("📋 Show Splitter Instructions"):
+            st.sidebar.markdown("""
+            **Command to split your file:**
+            ```bash
+            python csv_splitter.py your_file.csv 50000 chunks_
+            ```
+            
+            **This creates:**
+            - `split_files/chunk_001.csv` (50K rows)
+            - `split_files/chunk_002.csv` (50K rows)
+            - `split_files/chunk_003.csv` (50K rows)
+            - `split_files/manifest.txt` (file list)
+            ```
+            """)
+        
+        # File size calculator
+        st.sidebar.markdown("### 📊 File Size Calculator")
+        estimated_rows = st.sidebar.number_input(
+            "Estimated rows in your file",
+            min_value=1000,
+            max_value=100000000,
+            value=1000000,
+            help="Enter approximate number of rows"
+        )
+        
+        estimated_size = (estimated_rows * 0.5) / 1024  # Rough estimate: 0.5KB per row
+        st.sidebar.write(f"**Estimated file size: {estimated_size:.1f} MB**")
+        
+        if estimated_size > 200:
+            st.sidebar.warning("⚠️ File too large for direct upload!")
+            st.sidebar.info("💡 Use cloud storage or split the file first")
+        else:
+            st.sidebar.success("✅ File size OK for direct upload")
+    
+    elif import_method == "📁 Upload CSV Files":
         st.sidebar.subheader("Upload Your CSV Files")
+        st.sidebar.info("📝 **Note**: Streamlit has a 200MB upload limit. For larger files, use 'Large Files (>200MB)' option above.")
+        
         uploaded_accidents = st.sidebar.file_uploader(
             "Upload Accident Data CSV",
             type="csv",
-            help="Upload your accident information CSV file"
+            help="Upload your accident information CSV file (max 200MB)"
         )
         uploaded_vehicles = st.sidebar.file_uploader(
             "Upload Vehicle Data CSV (Optional)",
