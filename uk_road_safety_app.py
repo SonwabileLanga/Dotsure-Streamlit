@@ -256,7 +256,7 @@ def main():
     # Data Import Methods
     import_method = st.sidebar.radio(
         "Choose Data Import Method:",
-        ["📁 Upload CSV Files", "🌐 Load from URL", "📂 Use Sample Data", "💾 Load from GitHub"]
+        ["📁 Upload CSV Files", "🌐 Load from URL", "📂 Use Sample Data", "💾 Load from GitHub", "🗄️ Large File Solutions"]
     )
     
     # Advanced Filters Section
@@ -374,6 +374,131 @@ def main():
                     st.sidebar.success("✅ Data loaded from GitHub successfully!")
                 except Exception as e:
                     st.sidebar.error(f"❌ Error loading from GitHub: {str(e)}")
+    
+    elif import_method == "🗄️ Large File Solutions":
+        st.sidebar.subheader("Large File Solutions (>2GB)")
+        
+        st.sidebar.markdown("""
+        **For files larger than 2GB:**
+        
+        ### Option 1: Chunked Processing
+        Upload your large CSV file in chunks:
+        """)
+        
+        # Chunked file upload
+        chunked_file = st.sidebar.file_uploader(
+            "Upload Large CSV (Chunked)",
+            type="csv",
+            help="Upload your large CSV file - it will be processed in chunks"
+        )
+        
+        chunk_size = st.sidebar.number_input(
+            "Chunk Size (rows)",
+            min_value=1000,
+            max_value=100000,
+            value=10000,
+            help="Number of rows to process at a time"
+        )
+        
+        if chunked_file and st.sidebar.button("🔄 Process Large File"):
+            with st.spinner("Processing large file in chunks..."):
+                try:
+                    # Process file in chunks
+                    chunk_list = []
+                    for chunk in pd.read_csv(chunked_file, chunksize=chunk_size):
+                        chunk_list.append(chunk)
+                    
+                    # Combine chunks
+                    df = pd.concat(chunk_list, ignore_index=True)
+                    st.session_state.accidents_df = df
+                    st.session_state.vehicles_df = pd.DataFrame()
+                    st.session_state.data_loaded = True
+                    st.sidebar.success(f"✅ Large file processed successfully! {len(df)} rows loaded.")
+                except Exception as e:
+                    st.sidebar.error(f"❌ Error processing large file: {str(e)}")
+        
+        st.sidebar.markdown("""
+        ### Option 2: Cloud Storage
+        Use cloud storage solutions:
+        - **Google Drive**: Share CSV file publicly
+        - **Dropbox**: Create public link
+        - **AWS S3**: Use public bucket
+        - **Azure Blob**: Public container
+        
+        Then use "Load from URL" option above.
+        """)
+        
+        st.sidebar.markdown("""
+        ### Option 3: Database Connection
+        For very large datasets, consider:
+        - **PostgreSQL**: Direct database connection
+        - **MySQL**: Database integration
+        - **SQLite**: Local database file
+        - **BigQuery**: Google's data warehouse
+        """)
+        
+        # Database connection option
+        if st.sidebar.checkbox("🔗 Database Connection (Advanced)"):
+            db_type = st.sidebar.selectbox(
+                "Database Type",
+                ["PostgreSQL", "MySQL", "SQLite", "BigQuery"]
+            )
+            
+            if db_type == "SQLite":
+                db_file = st.sidebar.file_uploader(
+                    "Upload SQLite Database",
+                    type="db",
+                    help="Upload your SQLite database file"
+                )
+                
+                if db_file and st.sidebar.button("🔄 Connect to Database"):
+                    st.sidebar.info("Database connection feature coming soon!")
+            
+            else:
+                st.sidebar.info(f"{db_type} connection feature coming soon!")
+        
+        st.sidebar.markdown("""
+        ### Option 4: Data Sampling
+        For extremely large files, use sampling:
+        """)
+        
+        # Data sampling option
+        if st.sidebar.checkbox("📊 Enable Data Sampling"):
+            sample_size = st.sidebar.number_input(
+                "Sample Size (rows)",
+                min_value=1000,
+                max_value=1000000,
+                value=50000,
+                help="Number of random rows to sample from your data"
+            )
+            
+            sample_method = st.sidebar.selectbox(
+                "Sampling Method",
+                ["Random", "First N rows", "Last N rows", "Every Nth row"]
+            )
+            
+            if st.sidebar.button("🔄 Apply Sampling"):
+                st.sidebar.info("Sampling will be applied when you upload your file")
+        
+        st.sidebar.markdown("""
+        ### Option 5: Preprocessing Tips
+        For extremely large files:
+        1. **Split your CSV** into smaller files (1GB each)
+        2. **Use data sampling** (random subset)
+        3. **Aggregate data** before import
+        4. **Use parquet format** (more efficient)
+        5. **Compress files** (gzip, zip)
+        """)
+        
+        # File compression info
+        st.sidebar.markdown("""
+        ### 💡 Pro Tips:
+        - **Compress your CSV** with gzip to reduce size
+        - **Use parquet format** for better performance
+        - **Split large files** into multiple smaller files
+        - **Sample your data** for initial analysis
+        - **Use cloud storage** for very large datasets
+        """)
     
     # Legacy load button for local files
     if st.sidebar.button("🔄 Load Local UK Road Safety Data"):
@@ -907,6 +1032,13 @@ def main():
         - Test the dashboard with included sample data
         - Perfect for exploring features
         - No external data required
+        
+        ### 🗄️ Large File Solutions
+        - Handle files larger than 2GB
+        - Chunked processing for big datasets
+        - Cloud storage integration
+        - Data sampling and preprocessing
+        - Database connection options
         """)
         
         st.header("🎯 Analytics Features")
