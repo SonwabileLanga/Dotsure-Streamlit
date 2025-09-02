@@ -248,10 +248,13 @@ def create_advanced_analytics(df):
         
         # Vehicle performance comparison
         if 'vehicle_id' in df.columns and 'speed' in df.columns:
-            vehicle_performance = df.groupby('vehicle_id').agg({
-                'speed': ['mean', 'max', 'std'],
-                'acceleration': ['mean', 'std'] if 'acceleration' in df.columns else ['mean']
-            }).round(2)
+            # Build aggregation dictionary dynamically based on available columns
+            agg_dict = {'speed': ['mean', 'max', 'std']}
+            
+            if 'acceleration' in df.columns:
+                agg_dict['acceleration'] = ['mean', 'std']
+            
+            vehicle_performance = df.groupby('vehicle_id').agg(agg_dict).round(2)
             
             st.dataframe(vehicle_performance)
     
@@ -286,12 +289,18 @@ def create_advanced_analytics(df):
             # Add markers
             for _, row in df.iterrows():
                 color = 'red' if 'risk_score' in df.columns and row.get('risk_score', 0) > 0.7 else 'blue'
+                popup_text = f"Vehicle: {row.get('vehicle_id', 'Unknown')}"
+                if 'speed' in df.columns:
+                    popup_text += f"<br>Speed: {row.get('speed', 'N/A')} km/h"
+                if 'timestamp' in df.columns:
+                    popup_text += f"<br>Time: {row.get('timestamp', 'N/A')}"
+                
                 folium.CircleMarker(
                     [row['latitude'], row['longitude']],
                     radius=5,
                     color=color,
                     fill=True,
-                    popup=f"Vehicle: {row.get('vehicle_id', 'Unknown')}<br>Speed: {row.get('speed', 'N/A')} km/h"
+                    popup=popup_text
                 ).add_to(m)
             
             st_folium(m, width=700, height=500)
@@ -301,27 +310,49 @@ def create_advanced_analytics(df):
     with tab4:
         st.markdown("#### Predictive Analytics")
         
-        if 'risk_score' in df.columns and 'timestamp' in df.columns:
-            # Risk trend prediction
+        if 'timestamp' in df.columns:
             df['timestamp'] = pd.to_datetime(df['timestamp'])
-            daily_risk = df.groupby(df['timestamp'].dt.date)['risk_score'].mean()
             
-            # Simple trend line
-            x = np.arange(len(daily_risk))
-            y = daily_risk.values
-            z = np.polyfit(x, y, 1)
-            p = np.poly1d(z)
-            
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=daily_risk.index, y=daily_risk.values, 
-                                   mode='lines+markers', name='Actual Risk'))
-            fig.add_trace(go.Scatter(x=daily_risk.index, y=p(x), 
-                                   mode='lines', name='Trend', line=dict(dash='dash')))
-            
-            fig.update_layout(title="Risk Score Trend & Prediction")
-            st.plotly_chart(fig, use_container_width=True)
+            if 'risk_score' in df.columns:
+                # Risk trend prediction
+                daily_risk = df.groupby(df['timestamp'].dt.date)['risk_score'].mean()
+                
+                # Simple trend line
+                x = np.arange(len(daily_risk))
+                y = daily_risk.values
+                z = np.polyfit(x, y, 1)
+                p = np.poly1d(z)
+                
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=daily_risk.index, y=daily_risk.values, 
+                                       mode='lines+markers', name='Actual Risk'))
+                fig.add_trace(go.Scatter(x=daily_risk.index, y=p(x), 
+                                       mode='lines', name='Trend', line=dict(dash='dash')))
+                
+                fig.update_layout(title="Risk Score Trend & Prediction")
+                st.plotly_chart(fig, use_container_width=True)
+            elif 'speed' in df.columns:
+                # Speed trend prediction
+                daily_speed = df.groupby(df['timestamp'].dt.date)['speed'].mean()
+                
+                # Simple trend line
+                x = np.arange(len(daily_speed))
+                y = daily_speed.values
+                z = np.polyfit(x, y, 1)
+                p = np.poly1d(z)
+                
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=daily_speed.index, y=daily_speed.values, 
+                                       mode='lines+markers', name='Actual Speed'))
+                fig.add_trace(go.Scatter(x=daily_speed.index, y=p(x), 
+                                       mode='lines', name='Trend', line=dict(dash='dash')))
+                
+                fig.update_layout(title="Speed Trend & Prediction")
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Insufficient data for predictions. Please ensure risk scores or speed data with timestamps are available.")
         else:
-            st.info("Insufficient data for predictions. Please ensure risk scores and timestamps are available.")
+            st.info("Timestamp data required for predictions.")
 
 def create_enterprise_sidebar():
     """Create the enterprise sidebar"""
